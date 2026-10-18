@@ -114,3 +114,16 @@ func TestEntanglementLineOnlyWhenPresent(t *testing.T) {
 		t.Errorf("seed 25 应写\"无\"且不列零概率卦:\n%s", out)
 	}
 }
+
+func TestShowDisplaysVernacularOnlyWhereItExists(t *testing.T) {
+	_, out, _ := run(t, "show", "乾")
+	if !strings.Contains(out, "      白话：龙还潜伏在深渊里") || !strings.Contains(out, "用九：见群龙无首，吉。\n      白话：") {
+		t.Errorf("乾应逐爻显示白话（含用九）:\n%s", out)
+	}
+	// 暂无白话的卦：只有整卦的「  白话：」，不应出现爻级的空白话行
+	// 未济是传统顺序的最后一卦，最晚才会补白话；等它也补完时，这条断言就该删掉
+	_, out, _ = run(t, "show", "未济")
+	if strings.Contains(out, "      白话：") {
+		t.Errorf("暂无白话的卦不应出现爻级白话行:\n%s", out)
+	}
+}

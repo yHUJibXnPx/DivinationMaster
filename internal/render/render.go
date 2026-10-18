@@ -52,11 +52,19 @@ func Show(ic *corpus.IChing, code string) string {
 	out := []string{Hexagram(ic, code, nil), ""}
 	for i := len(h.Lines) - 1; i >= 0; i-- {
 		ln := h.Lines[i]
-		out = append(out, fmt.Sprintf("  %s：%s", ln.Name, ln.Text), "      象曰："+ln.Xiang)
+		out = append(out, fmt.Sprintf("  %s：%s", ln.Name, ln.Text))
+		if ln.Vernacular != "" {
+			out = append(out, "      白话："+ln.Vernacular)
+		}
+		out = append(out, "      象曰："+ln.Xiang)
 	}
 	if h.Extra != nil {
 		e := h.Extra
-		out = append(out, fmt.Sprintf("  %s：%s", e.Name, e.Text), "      象曰："+e.Xiang)
+		out = append(out, fmt.Sprintf("  %s：%s", e.Name, e.Text))
+		if e.Vernacular != "" {
+			out = append(out, "      白话："+e.Vernacular)
+		}
+		out = append(out, "      象曰："+e.Xiang)
 	}
 	return strings.Join(out, "\n")
 }
@@ -88,9 +96,11 @@ func Divination(ic *corpus.IChing, r *core.Result) string {
 		if p.Primary {
 			star = "★"
 		}
-		out = append(out,
-			fmt.Sprintf(" %s %s·%s（%s）：%s", star, p.Source, p.Label, p.Kind, p.Text),
-			"       象曰："+p.Xiang)
+		out = append(out, fmt.Sprintf(" %s %s·%s（%s）：%s", star, p.Source, p.Label, p.Kind, p.Text))
+		if p.Vernacular != "" {
+			out = append(out, "       白话："+p.Vernacular)
+		}
+		out = append(out, "       象曰："+p.Xiang)
 	}
 	out = append(out, "", "【量子视图】",
 		fmt.Sprintf("  分布熵 %.2f / 6 比特（0 = 完全确定，6 = 64 卦均等）", q.EntropyBits),

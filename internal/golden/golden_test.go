@@ -20,6 +20,7 @@ import (
 	"math"
 	"os"
 	"strconv"
+	"strings"
 	"testing"
 
 	"divinationmaster/internal/cli"
@@ -305,11 +306,33 @@ func diff(path string, want, got any, out *[]string) {
 		if g, ok := got.(float64); !ok || math.Abs(g-w) > tolerance {
 			*out = append(*out, fmt.Sprintf("%s: want %v, got %v", path, want, got))
 		}
+	case string:
+		if g, _ := got.(string); g != w {
+			*out = append(*out, fmt.Sprintf("%s: %s", path, firstDifference(w, g)))
+		}
 	default:
 		if want != got {
-			*out = append(*out, fmt.Sprintf("%s:\n   want %v\n   got  %v", path, want, got))
+			*out = append(*out, fmt.Sprintf("%s: want %v, got %v", path, want, got))
 		}
 	}
+}
+
+// firstDifference 指出两段文本第一处不同的行（整段输出很长，全部倒出来没法看）。
+func firstDifference(want, got string) string {
+	wl, gl := strings.Split(want, "\n"), strings.Split(got, "\n")
+	for i := 0; i < len(wl) || i < len(gl); i++ {
+		var w, g string
+		if i < len(wl) {
+			w = wl[i]
+		}
+		if i < len(gl) {
+			g = gl[i]
+		}
+		if w != g {
+			return fmt.Sprintf("第 %d 行不同\n   want %q\n   got  %q", i+1, w, g)
+		}
+	}
+	return "内容不同"
 }
 
 func writeGolden(g *golden) error {

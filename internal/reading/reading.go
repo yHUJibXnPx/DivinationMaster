@@ -29,12 +29,13 @@ func CastHexagram(r *rng.Rng) hexagram.Lines {
 
 // Passage 是应读的一段经文。
 type Passage struct {
-	Source  string `json:"source"`
-	Kind    string `json:"kind"`
-	Label   string `json:"label"`
-	Text    string `json:"text"`
-	Xiang   string `json:"xiang"`
-	Primary bool   `json:"primary"`
+	Source     string `json:"source"`
+	Kind       string `json:"kind"`
+	Label      string `json:"label"`
+	Text       string `json:"text"`
+	Vernacular string `json:"vernacular,omitempty"` // 爻辞白话；卦辞的白话是整卦的 interpretation，不在这里
+	Xiang      string `json:"xiang"`
+	Primary    bool   `json:"primary"`
 }
 
 // Reading 是断卦结果。
@@ -71,11 +72,11 @@ func Build(lines hexagram.Lines, ic *corpus.IChing) (Reading, error) {
 	}
 
 	judgement := func(src string, h *corpus.Hexagram, primary bool) Passage {
-		return Passage{src, "卦辞", h.Name, h.Judgement, h.XiangImage, primary}
+		return Passage{Source: src, Kind: "卦辞", Label: h.Name, Text: h.Judgement, Xiang: h.XiangImage, Primary: primary}
 	}
 	yao := func(src string, h *corpus.Hexagram, pos int, primary bool) Passage {
 		ln := h.Lines[pos-1]
-		return Passage{src, "爻辞", ln.Name, ln.Text, ln.Xiang, primary}
+		return Passage{Source: src, Kind: "爻辞", Label: ln.Name, Text: ln.Text, Vernacular: ln.Vernacular, Xiang: ln.Xiang, Primary: primary}
 	}
 	var unchanged []int
 	for p := 1; p <= hexagram.NLines; p++ {
@@ -115,7 +116,7 @@ func Build(lines hexagram.Lines, ic *corpus.IChing) (Reading, error) {
 		if ben.Extra != nil && (benCode == "111111" || benCode == "000000") {
 			e := ben.Extra
 			rule = fmt.Sprintf("六爻皆变：乾坤两卦读「%s」", e.Name)
-			passages = []Passage{{"本卦", "爻辞", e.Name, e.Text, e.Xiang, true}}
+			passages = []Passage{{Source: "本卦", Kind: "爻辞", Label: e.Name, Text: e.Text, Vernacular: e.Vernacular, Xiang: e.Xiang, Primary: true}}
 		} else {
 			rule = "六爻皆变：以变卦卦辞为断"
 			passages = []Passage{judgement("变卦", bian, true)}

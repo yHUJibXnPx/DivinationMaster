@@ -123,3 +123,22 @@ func contains(s, sub string) bool {
 	}
 	return false
 }
+
+func TestPassagesCarryVernacularWhenAvailable(t *testing.T) {
+	ic := corpus.MustLoad()
+	check := func(lines hexagram.Lines, wantLabel string, wantVernacular bool) {
+		t.Helper()
+		r, err := Build(lines, ic)
+		if err != nil || len(r.Passages) == 0 {
+			t.Fatalf("%v: %v", lines, err)
+		}
+		p := r.Passages[len(r.Passages)-1]
+		if p.Label != wantLabel || (p.Vernacular != "") != wantVernacular {
+			t.Errorf("%v: label=%q vernacular=%q，期望 %q / 有白话=%v", lines, p.Label, p.Vernacular, wantLabel, wantVernacular)
+		}
+	}
+	check(hexagram.Lines{9, 7, 7, 7, 7, 7}, "初九", true)  // 乾初九：已有白话
+	check(hexagram.Lines{9, 9, 9, 9, 9, 9}, "用九", true)  // 乾用九
+	check(hexagram.Lines{6, 6, 6, 6, 6, 6}, "用六", true)  // 坤用六
+	check(hexagram.Lines{6, 7, 8, 7, 8, 7}, "初六", false) // 未济（最后才补白话）：不能凭空出现
+}
