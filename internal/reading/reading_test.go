@@ -137,8 +137,23 @@ func TestPassagesCarryVernacularWhenAvailable(t *testing.T) {
 			t.Errorf("%v: label=%q vernacular=%q，期望 %q / 有白话=%v", lines, p.Label, p.Vernacular, wantLabel, wantVernacular)
 		}
 	}
-	check(hexagram.Lines{9, 7, 7, 7, 7, 7}, "初九", true)  // 乾初九：已有白话
-	check(hexagram.Lines{9, 9, 9, 9, 9, 9}, "用九", true)  // 乾用九
-	check(hexagram.Lines{6, 6, 6, 6, 6, 6}, "用六", true)  // 坤用六
-	check(hexagram.Lines{6, 7, 8, 7, 8, 7}, "初六", false) // 未济（最后才补白话）：不能凭空出现
+	check(hexagram.Lines{9, 7, 7, 7, 7, 7}, "初九", true) // 乾初九：已有白话
+	check(hexagram.Lines{9, 9, 9, 9, 9, 9}, "用九", true) // 乾用九
+	check(hexagram.Lines{6, 6, 6, 6, 6, 6}, "用六", true) // 坤用六
+}
+
+func TestEveryPassageCarriesVernacular(t *testing.T) {
+	// 白话已覆盖全部卦辞（64 条）与爻辞（386 条）：随机起 500 卦，读到的每一段经文都必须带白话
+	ic, r := corpus.MustLoad(), rng.New(7)
+	for i := 0; i < 500; i++ {
+		res, err := Build(CastHexagram(r), ic)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, p := range res.Passages {
+			if p.Vernacular == "" {
+				t.Fatalf("%s·%s（%s）缺少白话: %+v", p.Source, p.Label, p.Kind, p)
+			}
+		}
+	}
 }

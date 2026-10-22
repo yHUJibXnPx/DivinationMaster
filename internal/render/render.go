@@ -31,25 +31,34 @@ func padRunes(s string, width int, fill string) string {
 	return s
 }
 
-// Hexagram 排版一卦。
-func Hexagram(ic *corpus.IChing, code string, changing []int) string {
-	h, _ := ic.Get(code)
-	rows := hexagram.RenderLines(code, changing)
+// cardHead 是一卦的标题与卦象图。
+func cardHead(h *corpus.Hexagram, code string, changing []int) []string {
 	out := []string{hexTitle(h)}
-	for _, r := range rows {
+	for _, r := range hexagram.RenderLines(code, changing) {
 		out = append(out, "  "+r)
 	}
-	out = append(out,
+	return out
+}
+
+// Hexagram 排版一卦（占卜结果里的卦象卡片：卦辞、大象、整卦白话）。
+// 卦辞白话不放在卡片里，而是在"断卦"读到卦辞时才出现，避免重复。
+func Hexagram(ic *corpus.IChing, code string, changing []int) string {
+	h, _ := ic.Get(code)
+	out := append(cardHead(h, code, changing),
 		"  卦辞："+h.Judgement,
 		"  象曰："+h.XiangImage,
-		"  白话："+h.Interpretation)
+		"  概说："+h.Interpretation)
 	return strings.Join(out, "\n")
 }
 
-// Show 排版一整卦：卦辞、六爻爻辞、象传。
+// Show 排版一整卦：卦辞及其白话、大象、整卦白话，以及六爻爻辞与象传。
 func Show(ic *corpus.IChing, code string) string {
 	h, _ := ic.Get(code)
-	out := []string{Hexagram(ic, code, nil), ""}
+	out := append(cardHead(h, code, nil), "  卦辞："+h.Judgement)
+	if h.JudgementVernacular != "" {
+		out = append(out, "      白话："+h.JudgementVernacular)
+	}
+	out = append(out, "  象曰："+h.XiangImage, "  概说："+h.Interpretation, "")
 	for i := len(h.Lines) - 1; i >= 0; i-- {
 		ln := h.Lines[i]
 		out = append(out, fmt.Sprintf("  %s：%s", ln.Name, ln.Text))

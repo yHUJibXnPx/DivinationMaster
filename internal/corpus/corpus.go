@@ -16,8 +16,8 @@ import (
 //go:embed iching.json
 var raw []byte
 
-// vernacular.json：爻辞白话，分批补全。按卦码给出六爻（及乾坤的用九/用六）的白话，
-// 加载时合并进对应的 Line/Extra；没有出现在其中的卦暂无白话。
+// vernacular.json：白话。按卦码给出整卦白话（summary）与六爻（及乾坤的用九/用六）的白话，
+// 加载时合并进对应的 Hexagram/Line/Extra；没有出现在其中的卦暂无白话。
 //
 //go:embed vernacular.json
 var vernacularRaw []byte
@@ -41,18 +41,19 @@ type Extra struct {
 
 // Hexagram 是一卦的全部文字。
 type Hexagram struct {
-	ID             int    `json:"id"`
-	Name           string `json:"name"`
-	FullName       string `json:"full_name"`
-	Pinyin         string `json:"pinyin"`
-	Symbol         string `json:"symbol"`
-	Lower          string `json:"lower"`
-	Upper          string `json:"upper"`
-	Judgement      string `json:"judgement"`
-	XiangImage     string `json:"xiang_image"`
-	Interpretation string `json:"interpretation"`
-	Lines          []Line `json:"lines"`
-	Extra          *Extra `json:"extra,omitempty"`
+	ID                  int    `json:"id"`
+	Name                string `json:"name"`
+	FullName            string `json:"full_name"`
+	Pinyin              string `json:"pinyin"`
+	Symbol              string `json:"symbol"`
+	Lower               string `json:"lower"`
+	Upper               string `json:"upper"`
+	Judgement           string `json:"judgement"`
+	JudgementVernacular string `json:"judgement_vernacular,omitempty"` // 卦辞白话，来自 vernacular.json 的 judgement
+	XiangImage          string `json:"xiang_image"`
+	Interpretation      string `json:"interpretation,omitempty"` // 整卦白话，来自 vernacular.json 的 summary
+	Lines               []Line `json:"lines"`
+	Extra               *Extra `json:"extra,omitempty"`
 }
 
 // IChing 是加载后的语料。
@@ -97,8 +98,10 @@ func Load() (*IChing, error) {
 func (ic *IChing) mergeVernacular() error {
 	var doc struct {
 		Hexagrams map[string]struct {
-			Lines []string `json:"lines"`
-			Extra string   `json:"extra"`
+			Summary   string   `json:"summary"`   // 整卦白话
+			Judgement string   `json:"judgement"` // 卦辞白话
+			Lines     []string `json:"lines"`
+			Extra     string   `json:"extra"`
 		} `json:"hexagrams"`
 	}
 	if err := json.Unmarshal(vernacularRaw, &doc); err != nil {
@@ -111,6 +114,18 @@ func (ic *IChing) mergeVernacular() error {
 		h, ok := ic.Hexagrams[code]
 		if !ok {
 			return fmt.Errorf("vernacular.json：未知卦码 %q", code)
+		}
+		if v.Judgement != "" {
+			if !wellFormed(v.Judgement) {
+				return fmt.Errorf("vernacular.json：第 %d 卦 %s 的卦辞白话没有以句号收尾: %q", h.ID, h.Name, v.Judgement)
+			}
+			h.JudgementVernacular = v.Judgement
+		}
+		if v.Summary != "" {
+			if !wellFormed(v.Summary) {
+				return fmt.Errorf("vernacular.json：第 %d 卦 %s 的整卦白话没有以句号收尾: %q", h.ID, h.Name, v.Summary)
+			}
+			h.Interpretation = v.Summary
 		}
 		if len(v.Lines) != hexagram.NLines {
 			return fmt.Errorf("vernacular.json：第 %d 卦 %s 需要 6 条白话，实际 %d 条", h.ID, h.Name, len(v.Lines))

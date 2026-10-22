@@ -115,15 +115,22 @@ func TestEntanglementLineOnlyWhenPresent(t *testing.T) {
 	}
 }
 
-func TestShowDisplaysVernacularOnlyWhereItExists(t *testing.T) {
+func TestShowDisplaysVernacular(t *testing.T) {
 	_, out, _ := run(t, "show", "乾")
 	if !strings.Contains(out, "      白话：龙还潜伏在深渊里") || !strings.Contains(out, "用九：见群龙无首，吉。\n      白话：") {
 		t.Errorf("乾应逐爻显示白话（含用九）:\n%s", out)
 	}
-	// 暂无白话的卦：只有整卦的「  白话：」，不应出现爻级的空白话行
-	// 未济是传统顺序的最后一卦，最晚才会补白话；等它也补完时，这条断言就该删掉
-	_, out, _ = run(t, "show", "未济")
-	if strings.Contains(out, "      白话：") {
-		t.Errorf("暂无白话的卦不应出现爻级白话行:\n%s", out)
+}
+
+func TestShowDisplaysJudgementVernacularAndOverview(t *testing.T) {
+	_, out, _ := run(t, "show", "乾")
+	if !strings.Contains(out, "  卦辞：元亨利贞。\n      白话：“元亨利贞”") {
+		t.Errorf("卦辞下方应紧跟卦辞白话:\n%s", out)
+	}
+	if !strings.Contains(out, "\n  概说：乾象征天") {
+		t.Errorf("整卦那段应以「概说」为标签:\n%s", out)
+	}
+	if strings.Contains(out, "\n  白话：") {
+		t.Errorf("顶层不应再出现「  白话：」，以免与卦辞白话混淆:\n%s", out)
 	}
 }

@@ -33,7 +33,7 @@ type Passage struct {
 	Kind       string `json:"kind"`
 	Label      string `json:"label"`
 	Text       string `json:"text"`
-	Vernacular string `json:"vernacular,omitempty"` // 爻辞白话；卦辞的白话是整卦的 interpretation，不在这里
+	Vernacular string `json:"vernacular,omitempty"` // 白话；卦辞与爻辞都有
 	Xiang      string `json:"xiang"`
 	Primary    bool   `json:"primary"`
 }
@@ -72,7 +72,7 @@ func Build(lines hexagram.Lines, ic *corpus.IChing) (Reading, error) {
 	}
 
 	judgement := func(src string, h *corpus.Hexagram, primary bool) Passage {
-		return Passage{Source: src, Kind: "卦辞", Label: h.Name, Text: h.Judgement, Xiang: h.XiangImage, Primary: primary}
+		return Passage{Source: src, Kind: "卦辞", Label: h.Name, Text: h.Judgement, Vernacular: h.JudgementVernacular, Xiang: h.XiangImage, Primary: primary}
 	}
 	yao := func(src string, h *corpus.Hexagram, pos int, primary bool) Passage {
 		ln := h.Lines[pos-1]
